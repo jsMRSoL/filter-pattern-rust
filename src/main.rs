@@ -54,7 +54,7 @@ enum Criteria {
 }
 
 impl Criteria {
-    fn meet_criteria(&self, persons: &Vec<Person>) -> Vec<Person> {
+    fn meet_criteria<'a>(&self, persons: &Vec<&'a Person>) -> Vec<&'a Person> {
         match &self {
             Criteria::Female => self.meet_criteria_female(persons),
             Criteria::Male => self.meet_criteria_male(persons),
@@ -63,74 +63,75 @@ impl Criteria {
             Criteria::Or(first, second) => self.meet_criteria_or(persons, first, second),
         }
     }
-    fn meet_criteria_female(&self, persons: &Vec<Person>) -> Vec<Person> {
-        let mut females: Vec<Person> = Vec::new();
-        for person in persons.iter() {
+    fn meet_criteria_female<'a>(&self, persons: &Vec<&'a Person>) -> Vec<&'a Person> {
+        let mut females: Vec<&Person> = Vec::new();
+        for person in persons {
             if let Sex::Female = person.gender {
-                females.push(person.clone())
+                females.push(person)
             }
         }
         females
     }
-    fn meet_criteria_male(&self, persons: &Vec<Person>) -> Vec<Person> {
-        let mut males: Vec<Person> = Vec::new();
-        for person in persons.iter() {
+    fn meet_criteria_male<'a>(&self, persons: &Vec<&'a Person>) -> Vec<&'a Person> {
+        let mut males: Vec<&Person> = Vec::new();
+        for person in persons {
             if let Sex::Male = person.gender {
-                males.push(person.clone())
+                males.push(person)
             }
         }
         males
     }
-    fn meet_criteria_single(&self, persons: &Vec<Person>) -> Vec<Person> {
-        let mut singletons: Vec<Person> = Vec::new();
-        for person in persons.iter() {
+    fn meet_criteria_single<'a>(&self, persons: &Vec<&'a Person>) -> Vec<&'a Person> {
+        let mut singletons: Vec<&Person> = Vec::new();
+        for person in persons {
             if let MaritalStatus::Single = person.marital_status {
-                singletons.push(person.clone())
+                singletons.push(person)
             }
         }
         singletons
     }
-    fn meet_criteria_and(
+    fn meet_criteria_and<'a>(
         &self,
-        persons: &Vec<Person>,
+        persons: &Vec<&'a Person>,
         first: &Box<Criteria>,
         second: &Box<Criteria>,
-    ) -> Vec<Person> {
-        let first_criteria_persons: Vec<Person> = first.meet_criteria(persons);
-        let second_criteria_persons: Vec<Person> = second.meet_criteria(&first_criteria_persons);
+    ) -> Vec<&'a Person> {
+        let first_criteria_persons: Vec<&Person> = first.meet_criteria(persons);
+        let second_criteria_persons: Vec<&Person> = second.meet_criteria(&first_criteria_persons);
         second_criteria_persons
     }
-    fn meet_criteria_or(
+    fn meet_criteria_or<'a>(
         &self,
-        persons: &Vec<Person>,
+        persons: &Vec<&'a Person>,
         first: &Box<Criteria>,
         second: &Box<Criteria>,
-    ) -> Vec<Person> {
-        let mut first_criteria_persons: Vec<Person> = first.meet_criteria(persons);
-        let second_criteria_persons: Vec<Person> = second.meet_criteria(persons);
-        for person in second_criteria_persons.iter() {
-            if !first_criteria_persons.contains(person) {
-                first_criteria_persons.push(person.clone())
+    ) -> Vec<&'a Person> {
+        let mut first_criteria_persons: Vec<&Person> = first.meet_criteria(persons);
+        let second_criteria_persons: Vec<&Person> = second.meet_criteria(persons);
+        for person in second_criteria_persons {
+            if !first_criteria_persons.contains(&person) {
+                first_criteria_persons.push(person)
             }
         }
         first_criteria_persons
     }
 }
 
-fn print_persons(persons: Vec<Person>) {
+fn print_persons(persons: Vec<&Person>) {
     for person in persons.iter() {
 	println!("Name: {}, Gender: {}, Marital Status: {}", person.get_name(), person.get_gender(), person.get_marital_status());
     }
 }
 
 fn main() {
-    let mut persons: Vec<Person> = Vec::new();
-    persons.push(Person::new("Robert", Sex::Male, MaritalStatus::Single));
-    persons.push(Person::new("John", Sex::Male, MaritalStatus::Married));
-    persons.push(Person::new("Laura", Sex::Female, MaritalStatus::Married));
-    persons.push(Person::new("Diana", Sex::Female, MaritalStatus::Single));
-    persons.push(Person::new("Mike", Sex::Male, MaritalStatus::Single));
-    persons.push(Person::new("Bobby", Sex::Male, MaritalStatus::Single));
+    let mut persons: Vec<&Person> = Vec::new();
+    let robert = Person::new("Robert", Sex::Male, MaritalStatus::Single);
+    let john = Person::new("John", Sex::Male, MaritalStatus::Married);
+    let laura = Person::new("Laura", Sex::Female, MaritalStatus::Married);
+    let diana = Person::new("Diana", Sex::Female, MaritalStatus::Single); 
+    let mike = Person::new("Mike", Sex::Male, MaritalStatus::Single);
+    let bobby = Person::new("Bobby", Sex::Male, MaritalStatus::Single);
+    persons.extend([&robert, &john, &laura, &diana, &mike, &bobby]);
 
     let male: Criteria = Criteria::Male;
     let female: Criteria = Criteria::Female;
